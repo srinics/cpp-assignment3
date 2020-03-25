@@ -1,9 +1,15 @@
+/*
+* Author: M1043833 ( Srinivasan Rajendran )
+* Description: This file (Main.c) contains main function for Creating Single Instance Application using mutex*
+* */
+
 #include <iostream>
-#include <pthread.h>
 #include <csignal>
 
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <pthread.h>
 #endif
 
 
@@ -20,8 +26,14 @@ void RunEndless(){
 
 
 #ifdef _WIN32
+/*
+Author: M1043833
+Function Name: WindowsSingleInstanceApp()
+Description:
+Function to create single instance.
+This function will use/invoke in Windows enviroment.
+*/
 HANDLE hMutexHandle;
-
 bool WindowsSingleInstanceApp(){
 	// ensure only one running instance
 	hMutexHandle = CreateMutex(NULL, TRUE, "my.mutex.name");
@@ -39,22 +51,33 @@ bool WindowsSingleInstanceApp(){
 }
 #endif
 
-
-void signalHandler(int signum) {
+/*
+Author: M1043833
+Function Name: SignalHandler(int SigNum)
+Description:
+This is the callback function SIGINT signal.
+This function will use/invoke in Windows & Linux enviroment.
+*/
+void SignalHandler(int signum) {
 	std::cout << "Interrupt signal (" << signum << ") received.\n";
-
-	// cleanup and close up stuff here  
-	// terminate program  
-
+	
 #ifdef _WIN32
 	ReleaseMutex(hMutexHandle);
 	CloseHandle(hMutexHandle);
 #endif
 	exit(signum);
 }
+
+
+/*
+Author: M1043833
+Function Name: int main(int argc, char *argv[])
+Description:
+This is main execution function.
+*/
 int main(int argc, char *argv[])
 {
-	signal(SIGINT, signalHandler);
+	signal(SIGINT, SignalHandler);
 
 #ifdef _WIN32
 	auto r = WindowsSingleInstanceApp();
