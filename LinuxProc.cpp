@@ -21,14 +21,17 @@ int main(void)
         printf("Could not open current directory" ); 
         return 0; 
     } 
+
+    int proc_cnt=0;
   
     // Refer http://pubs.opengroup.org/onlinepubs/7990989775/xsh/readdir.html 
     // for readdir() 
     while ((de = readdir(dr)) != NULL) {
 		if(de->d_type == DT_DIR && is_number(std::string(de->d_name)))
             		printf("%s\n", de->d_name); 
+		proc_cnt++;
     }
-  
+    printf("Total proc count:%d\n", proc_cnt); 
     closedir(dr);     
     return 0; 
 } 
