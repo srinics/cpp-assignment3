@@ -65,6 +65,7 @@ bool lockflag = false;
 bool LinuxSingleInstanceApp(){
 	int cond_id, mutex_id;
     	int mode = S_IRWXU | S_IRWXG;
+	int readMutex =false;
 	/* Initialise attribute to mutex. */
 	pthread_mutexattr_init(&attrmutex);
 	pthread_mutexattr_setpshared(&attrmutex, PTHREAD_PROCESS_SHARED);
@@ -81,6 +82,7 @@ bool LinuxSingleInstanceApp(){
 		}
 	}else{
 		std::cout << "Reading existing mutex" << std::endl;
+		readMutex = true;
 	}
 
     	if (ftruncate(mutex_id, sizeof(pthread_mutex_t)) == -1) {
@@ -94,7 +96,9 @@ bool LinuxSingleInstanceApp(){
     	}
 
 	/* Initialise mutex. */
-	pthread_mutex_init(pmutex, &attrmutex);
+	if(!readMutex){
+		pthread_mutex_init(pmutex, &attrmutex);
+	}
 
 	if( pthread_mutex_trylock(pmutex) == 0){
 		lockflag=true;
