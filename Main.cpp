@@ -11,6 +11,11 @@
 #else
 #include <pthread.h>
 #include <unistd.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #endif
 
 
@@ -51,16 +56,34 @@ bool WindowsSingleInstanceApp(){
 	return true;
 }
 #else
-pthread_mutex_t * pmutex = NULL;
+
+pthread_mutex_t  *pmutex;
 pthread_mutexattr_t attrmutex;
 bool lockflag = false;
-bool LinuxSingleInstanceApp(){
+#define MYMUTEX "/mymutex"
 
+bool LinuxSingleInstanceApp(){
+	int cond_id, mutex_id;
+    	int mode = S_IRWXU | S_IRWXG;
 	/* Initialise attribute to mutex. */
 	pthread_mutexattr_init(&attrmutex);
 	pthread_mutexattr_setpshared(&attrmutex, PTHREAD_PROCESS_SHARED);
 
 	/* Allocate memory to pmutex here. */
+	mutex_id = shm_open(MYMUTEX, O_CREAT | O_RDWR | O_TRUNC, mode);
+    	if (mutex_id < 0) {
+        	std::cout << "shm_open failed with " << MYMUTEX << std::endl;
+        	return false;
+    	}
+    	if (ftruncate(mutex_id, sizeof(pthread_mutex_t)) == -1) {
+        	std::cout << "ftruncate failed with " << MYMUTEX << std::endl;
+        	return false;
+    	}
+    	pmutex = (pthread_mutex_t *)mmap(NULL, sizeof(pthread_mutex_t), PROT_READ | PROT_WRITE, MAP_SHARED, mutex_id, 0);
+    	if (pmutex == MAP_FAILED) {
+        	std::cout << "mmap failed with " << MYMUTEX << std::endl;
+        	return false;
+    	}
 
 	/* Initialise mutex. */
 	pthread_mutex_init(pmutex, &attrmutex);
@@ -94,6 +117,7 @@ void SignalHandler(int signum) {
 	CloseHandle(hMutexHandle);
 #else
 	/* Clean up. */
+	shm_unlink(MYMUTEX);
 	if(lockflag)
 		pthread_mutex_unlock(pmutex);
 	pthread_mutex_destroy(pmutex);

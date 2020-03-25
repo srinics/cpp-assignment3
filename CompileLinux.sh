@@ -5,4 +5,4 @@ if [ "$op" = "clean" ]; then
 	rm -rf $binary_name
 	exit 0;
 fi
-g++ Main.cpp -o $binary_name -lpthread -lrt
+g++ -g Main.cpp -o $binary_name -lpthread -lrt
