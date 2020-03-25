@@ -60,7 +60,7 @@ bool WindowsSingleInstanceApp(){
 pthread_mutex_t  *pmutex;
 pthread_mutexattr_t attrmutex;
 bool lockflag = false;
-#define MYMUTEX "/mymutex"
+#define MYMUTEX "/tmp/mymutex"
 
 bool LinuxSingleInstanceApp(){
 	int cond_id, mutex_id;
@@ -72,7 +72,7 @@ bool LinuxSingleInstanceApp(){
 	/* Allocate memory to pmutex here. */
 	mutex_id = shm_open(MYMUTEX, O_CREAT | O_RDWR | O_TRUNC, mode);
     	if (mutex_id < 0) {
-        	std::cout << "shm_open failed with " << MYMUTEX << std::endl;
+        	std::cout << "shm_open failed with " << MYMUTEX << " ,Error: "<< mutex_id << std::endl;
         	return false;
     	}
     	if (ftruncate(mutex_id, sizeof(pthread_mutex_t)) == -1) {
