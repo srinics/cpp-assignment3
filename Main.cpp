@@ -50,6 +50,25 @@ bool WindowsSingleInstanceApp(){
 	RunEndless();
 	return true;
 }
+#else
+pthread_mutex_t * pmutex = NULL;
+pthread_mutexattr_t attrmutex;
+bool LinuxSingleInstanceApp(){
+
+	/* Initialise attribute to mutex. */
+	pthread_mutexattr_init(&attrmutex);
+	pthread_mutexattr_setpshared(&attrmutex, PTHREAD_PROCESS_SHARED);
+
+	/* Allocate memory to pmutex here. */
+
+	/* Initialise mutex. */
+	pthread_mutex_init(pmutex, &attrmutex);
+
+	pthread_mutex_try_lock(pmutex);
+	/* Use the mutex. */
+
+	return true;
+}
 #endif
 
 /*
@@ -65,6 +84,10 @@ void SignalHandler(int signum) {
 #ifdef _WIN32
 	ReleaseMutex(hMutexHandle);
 	CloseHandle(hMutexHandle);
+#else
+	/* Clean up. */
+	pthread_mutex_destroy(pmutex);
+	pthread_mutexattr_destroy(&attrmutex); 
 #endif
 	exit(signum);
 }
