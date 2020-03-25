@@ -53,6 +53,7 @@ bool WindowsSingleInstanceApp(){
 #else
 pthread_mutex_t * pmutex = NULL;
 pthread_mutexattr_t attrmutex;
+bool lockflag = false;
 bool LinuxSingleInstanceApp(){
 
 	/* Initialise attribute to mutex. */
@@ -64,9 +65,16 @@ bool LinuxSingleInstanceApp(){
 	/* Initialise mutex. */
 	pthread_mutex_init(pmutex, &attrmutex);
 
-	pthread_mutex_try_lock(pmutex);
+	if( pthread_mutex_trylock(pmutex) == 0){
+		lockflag=true;
+		RunEndless();
+	}else {
+		std::cout << "Application instance already running" << std::endl;
+		return false;
+	}
 	/* Use the mutex. */
 
+	std::cout << "Application instance stated" << std::endl;
 	return true;
 }
 #endif
@@ -86,6 +94,8 @@ void SignalHandler(int signum) {
 	CloseHandle(hMutexHandle);
 #else
 	/* Clean up. */
+	if(lockflag)
+		pthread_mutex_unlock(pmutex);
 	pthread_mutex_destroy(pmutex);
 	pthread_mutexattr_destroy(&attrmutex); 
 #endif
@@ -105,6 +115,12 @@ int main(int argc, char *argv[])
 
 #ifdef _WIN32
 	auto r = WindowsSingleInstanceApp();
+	if (!r){
+		std::cout << "Application start failed" << std::endl;
+		return 0;
+	}
+#else
+	auto r= LinuxSingleInstanceApp();
 	if (!r){
 		std::cout << "Application start failed" << std::endl;
 		return 0;
