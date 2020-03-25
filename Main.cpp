@@ -60,7 +60,7 @@ bool WindowsSingleInstanceApp(){
 pthread_mutex_t  *pmutex;
 pthread_mutexattr_t attrmutex;
 bool lockflag = false;
-#define MYMUTEX "/tmp/mymutex"
+#define MYMUTEX "mymutex"
 
 bool LinuxSingleInstanceApp(){
 	int cond_id, mutex_id;
@@ -70,11 +70,19 @@ bool LinuxSingleInstanceApp(){
 	pthread_mutexattr_setpshared(&attrmutex, PTHREAD_PROCESS_SHARED);
 
 	/* Allocate memory to pmutex here. */
-	mutex_id = shm_open(MYMUTEX, O_CREAT | O_RDWR | O_TRUNC, mode);
-    	if (mutex_id < 0) {
-        	std::cout << "shm_open failed with " << MYMUTEX << " ,Error: "<< mutex_id << std::endl;
-        	return false;
-    	}
+	mutex_id = shm_open(MYMUTEX,  O_RDWR, mode);
+	if(mutex_id < 0){
+
+		std::cout << "Creating New mutex" << std::endl;
+		mutex_id = shm_open(MYMUTEX, O_CREAT | O_RDWR | O_TRUNC, mode);
+		if (mutex_id < 0) {
+			std::cout << "shm_open failed with " << MYMUTEX << " ,Error: "<< mutex_id << std::endl;
+			return false;
+		}
+	}else{
+		std::cout << "Reading existing mutex" << std::endl;
+	}
+
     	if (ftruncate(mutex_id, sizeof(pthread_mutex_t)) == -1) {
         	std::cout << "ftruncate failed with " << MYMUTEX << std::endl;
         	return false;
