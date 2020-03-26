@@ -8,4 +8,4 @@ if [ "$op" = "clean" ]; then
 	exit 0;
 fi
 g++ -g Main.cpp -o $binary_name -lpthread -lrt
-g++ -g LinuxProc.cpp -o $binary_name2 -lpthread -lrt
+g++ -g ProcessList.cpp -o $binary_name2 -lpthread -lrt
